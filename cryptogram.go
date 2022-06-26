@@ -6,28 +6,35 @@ import (
 	"strconv"
 )
 
-func startCryptogram(cipherText string) {
-	patternList := generatePatternList(cipherText)
-	patternMap := getPatternMap()
+func startCryptogram(cipherTexts []string) {
+	patternLists := make([][][]string, 0)
+	for i := 0; i < len(cipherTexts); i++ {
+		patternLists = append(patternLists, generatePatternList(cipherTexts[i]))
+	}
 
+	patternMap := getPatternMap()
 	charMap := make(map[rune]rune)
 	for {
 		// INITIAL PRINTOUT
-		fmt.Println(cipherText)
-
-		for _, char := range cipherText {
-			if !isLatin(char) {
-				fmt.Print(string(char))
-			} else {
-				mappedChar, ok := charMap[char]
-				if !ok {
-					fmt.Print("_")
+		for i := 0; i < len(cipherTexts); i++ {
+			fmt.Printf("%d: %s\n", i, cipherTexts[i])
+		}
+		for i := 0; i < len(cipherTexts); i++ {
+			fmt.Printf("%d: ", i)
+			for _, char := range cipherTexts[i] {
+				if !isLatin(char) {
+					fmt.Print(string(char))
 				} else {
-					fmt.Printf(string(mappedChar))
+					mappedChar, ok := charMap[char]
+					if !ok {
+						fmt.Print("_")
+					} else {
+						fmt.Printf(string(mappedChar))
+					}
 				}
 			}
+			fmt.Println()
 		}
-		fmt.Println()
 
 		// START USER INPUT
 		for {
@@ -39,48 +46,59 @@ func startCryptogram(cipherText string) {
 				break
 			} else if userInput == "assign" {
 				innerUserInput, _ := waitForInput()
-				cipherChar, clearChar := parseUserInput(innerUserInput)
+				cipherChar, clearChar := parseUserInput2(innerUserInput)
 				charMap[cipherChar] = clearChar
 				break
 			} else if userInput == "pattern-at" {
 				innerUserInput, _ := waitForInput()
-				inputIndex, inputWidth := parseUserInput(innerUserInput)
-				index, _ := strconv.Atoi(string(inputIndex))
+				inputSentenceIndex, inputCharIndex, inputWidth := parseUserInput3(innerUserInput)
+				indexSentence, _ := strconv.Atoi(string(inputSentenceIndex))
+				indexChar, _ := strconv.Atoi(string(inputCharIndex))
 				width, _ := strconv.Atoi(string(inputWidth))
-				fmt.Println(patternList[index][width])
+				fmt.Println(patternLists[indexSentence][indexChar][width])
 			} else if userInput == "patterns-at" {
 				innerUserInput, _ := waitForInput()
-				index, _ := strconv.Atoi(innerUserInput)
-				fmt.Println(patternList[index])
+				inputSentenceIndex, inputCharIndex := parseUserInput2(innerUserInput)
+				sentenceIndex, _ := strconv.Atoi(string(inputSentenceIndex))
+				charIndex, _ := strconv.Atoi(string(inputCharIndex))
+				fmt.Println(patternLists[sentenceIndex][charIndex])
 			} else if userInput == "words-at" {
 				innerUserInput, _ := waitForInput()
-				inputIndex, inputWidth := parseUserInput(innerUserInput)
-				index, _ := strconv.Atoi(string(inputIndex))
+				inputSentenceIndex, inputCharIndex, inputWidth := parseUserInput3(innerUserInput)
+				indexSentence, _ := strconv.Atoi(string(inputSentenceIndex))
+				indexChar, _ := strconv.Atoi(string(inputCharIndex))
 				width, _ := strconv.Atoi(string(inputWidth))
-				fmt.Println(patternMap[patternList[index][width]])
+				fmt.Println(patternMap[patternLists[indexSentence][indexChar][width]])
 			} else if userInput == "all-words-at" {
 				innerUserInput, _ := waitForInput()
-				index, _ := strconv.Atoi(innerUserInput)
-				for _, pattern := range patternList[index] {
+				indexSentenceInput, indexCharInput := parseUserInput2(innerUserInput)
+				indexSentence, _ := strconv.Atoi(string(indexSentenceInput))
+				indexChar, _ := strconv.Atoi(string(indexCharInput))
+				for _, pattern := range patternLists[indexSentence][indexChar] {
 					fmt.Println(patternMap[pattern])
 				}
 			} else if userInput == "indices-for-word" {
 				innerUserInput, _ := waitForInput()
 				inputPattern := getPattern(innerUserInput)
-				indices := make([]int, 0)
-				for i, patterns := range patternList {
-					windowLenIndex := len(innerUserInput) - 1
-					if len(patterns) > windowLenIndex {
-						if patterns[windowLenIndex] == inputPattern {
-							indices = append(indices, i)
+				sentenceIndices := make([][]int, 0)
+				for i := 0; i < len(patternLists); i++ {
+					sentenceIndices = append(sentenceIndices, make([]int, 0))
+					for j, patterns := range patternLists[i] {
+						windowLenIndex := len(innerUserInput) - 1
+						if len(patterns) > windowLenIndex {
+							if patterns[windowLenIndex] == inputPattern {
+								sentenceIndices[i] = append(sentenceIndices[i], j)
+							}
 						}
 					}
 				}
-				fmt.Println(indices)
+				fmt.Println(sentenceIndices)
 			} else if userInput == "assign-nth-char" {
 				innerUserInput, _ := waitForInput()
-				index, _ := strconv.Atoi(innerUserInput)
-				cipherChar := []rune(cipherText)[index]
+				indexSentenceInput, indexCharInput := parseUserInput2(innerUserInput)
+				indexSentence, _ := strconv.Atoi(string(indexSentenceInput))
+				indexChar, _ := strconv.Atoi(string(indexCharInput))
+				cipherChar := []rune(cipherTexts[indexSentence])[indexChar]
 				clearChar, _ := waitForInput()
 				charMap[cipherChar] = []rune(clearChar)[0]
 				break
@@ -90,7 +108,12 @@ func startCryptogram(cipherText string) {
 
 }
 
-func parseUserInput(s string) (rune, rune) {
+func parseUserInput2(s string) (rune, rune) {
 	runes := []rune(s)
 	return runes[0], runes[2]
+}
+
+func parseUserInput3(s string) (rune, rune, rune) {
+	runes := []rune(s)
+	return runes[0], runes[2], runes[4]
 }
