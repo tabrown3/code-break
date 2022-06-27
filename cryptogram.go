@@ -73,7 +73,30 @@ func startCryptogram(cipherTexts []string) {
 				indexSentence, _ := strconv.Atoi(inputSentenceIndex)
 				indexChar, _ := strconv.Atoi(inputCharIndex)
 				width, _ := strconv.Atoi(inputWidth)
-				fmt.Println(patternMap[patternLists[indexSentence][indexChar][width]])
+				words := patternMap[patternLists[indexSentence][indexChar][width]]
+
+				filteredWords := make([]string, 0)
+				for i := 0; i < len(words); i++ {
+					word := []rune(words[i])
+					cipherWord := []rune(cipherTexts[indexSentence])[indexChar : width+1]
+					isInvalid := false
+					for j := 0; j < len(word); j++ {
+						mappedChar, exists := charMap[cipherWord[j]]
+						wordChar := word[j]
+
+						if exists && mappedChar != '_' && mappedChar != wordChar {
+							// if the word has a letter at this position that doesn't match the current guess,
+							// it's an invalid suggestion
+							isInvalid = true
+							break
+						}
+					}
+					if !isInvalid {
+						filteredWords = append(filteredWords, string(word))
+					}
+				}
+				fmt.Print(filteredWords)
+				fmt.Println()
 			} else if userInput == "all-words-at" {
 				innerUserInput, _ := waitForInput()
 				tokens := parseInput(innerUserInput, " ")
@@ -118,3 +141,7 @@ func startCryptogram(cipherTexts []string) {
 func parseInput(s string, sep string) []string {
 	return strings.Split(s, sep)
 }
+
+//func filterValidWords() []string {
+//
+//}
