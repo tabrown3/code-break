@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 )
 
 func startCryptogram(cipherTexts []string) {
@@ -46,34 +47,39 @@ func startCryptogram(cipherTexts []string) {
 				break
 			} else if userInput == "assign" {
 				innerUserInput, _ := waitForInput()
-				cipherChar, clearChar := parseUserInput2(innerUserInput)
+				tokens := parseInput(innerUserInput, "=")
+				cipherChar, clearChar := rune(tokens[0][0]), rune(tokens[1][0])
 				charMap[cipherChar] = clearChar
 				break
 			} else if userInput == "pattern-at" {
 				innerUserInput, _ := waitForInput()
-				inputSentenceIndex, inputCharIndex, inputWidth := parseUserInput3(innerUserInput)
-				indexSentence, _ := strconv.Atoi(string(inputSentenceIndex))
-				indexChar, _ := strconv.Atoi(string(inputCharIndex))
-				width, _ := strconv.Atoi(string(inputWidth))
+				tokens := parseInput(innerUserInput, " ")
+				inputSentenceIndex, inputCharIndex, inputWidth := tokens[0], tokens[1], tokens[2]
+				indexSentence, _ := strconv.Atoi(inputSentenceIndex)
+				indexChar, _ := strconv.Atoi(inputCharIndex)
+				width, _ := strconv.Atoi(inputWidth)
 				fmt.Println(patternLists[indexSentence][indexChar][width])
 			} else if userInput == "patterns-at" {
 				innerUserInput, _ := waitForInput()
-				inputSentenceIndex, inputCharIndex := parseUserInput2(innerUserInput)
-				sentenceIndex, _ := strconv.Atoi(string(inputSentenceIndex))
-				charIndex, _ := strconv.Atoi(string(inputCharIndex))
+				tokens := parseInput(innerUserInput, " ")
+				inputSentenceIndex, inputCharIndex := tokens[0], tokens[1]
+				sentenceIndex, _ := strconv.Atoi(inputSentenceIndex)
+				charIndex, _ := strconv.Atoi(inputCharIndex)
 				fmt.Println(patternLists[sentenceIndex][charIndex])
 			} else if userInput == "words-at" {
 				innerUserInput, _ := waitForInput()
-				inputSentenceIndex, inputCharIndex, inputWidth := parseUserInput3(innerUserInput)
-				indexSentence, _ := strconv.Atoi(string(inputSentenceIndex))
-				indexChar, _ := strconv.Atoi(string(inputCharIndex))
-				width, _ := strconv.Atoi(string(inputWidth))
+				tokens := parseInput(innerUserInput, " ")
+				inputSentenceIndex, inputCharIndex, inputWidth := tokens[0], tokens[1], tokens[2]
+				indexSentence, _ := strconv.Atoi(inputSentenceIndex)
+				indexChar, _ := strconv.Atoi(inputCharIndex)
+				width, _ := strconv.Atoi(inputWidth)
 				fmt.Println(patternMap[patternLists[indexSentence][indexChar][width]])
 			} else if userInput == "all-words-at" {
 				innerUserInput, _ := waitForInput()
-				indexSentenceInput, indexCharInput := parseUserInput2(innerUserInput)
-				indexSentence, _ := strconv.Atoi(string(indexSentenceInput))
-				indexChar, _ := strconv.Atoi(string(indexCharInput))
+				tokens := parseInput(innerUserInput, " ")
+				indexSentenceInput, indexCharInput := tokens[0], tokens[1]
+				indexSentence, _ := strconv.Atoi(indexSentenceInput)
+				indexChar, _ := strconv.Atoi(indexCharInput)
 				for _, pattern := range patternLists[indexSentence][indexChar] {
 					fmt.Println(patternMap[pattern])
 				}
@@ -95,9 +101,10 @@ func startCryptogram(cipherTexts []string) {
 				fmt.Println(sentenceIndices)
 			} else if userInput == "assign-nth-char" {
 				innerUserInput, _ := waitForInput()
-				indexSentenceInput, indexCharInput := parseUserInput2(innerUserInput)
-				indexSentence, _ := strconv.Atoi(string(indexSentenceInput))
-				indexChar, _ := strconv.Atoi(string(indexCharInput))
+				tokens := parseInput(innerUserInput, " ")
+				indexSentenceInput, indexCharInput := tokens[0], tokens[1]
+				indexSentence, _ := strconv.Atoi(indexSentenceInput)
+				indexChar, _ := strconv.Atoi(indexCharInput)
 				cipherChar := []rune(cipherTexts[indexSentence])[indexChar]
 				clearChar, _ := waitForInput()
 				charMap[cipherChar] = []rune(clearChar)[0]
@@ -108,12 +115,6 @@ func startCryptogram(cipherTexts []string) {
 
 }
 
-func parseUserInput2(s string) (rune, rune) {
-	runes := []rune(s)
-	return runes[0], runes[2]
-}
-
-func parseUserInput3(s string) (rune, rune, rune) {
-	runes := []rune(s)
-	return runes[0], runes[2], runes[4]
+func parseInput(s string, sep string) []string {
+	return strings.Split(s, sep)
 }
