@@ -74,27 +74,8 @@ func startCryptogram(cipherTexts []string) {
 				indexChar, _ := strconv.Atoi(inputCharIndex)
 				width, _ := strconv.Atoi(inputWidth)
 				words := patternMap[patternLists[indexSentence][indexChar][width]]
-
-				filteredWords := make([]string, 0)
-				for i := 0; i < len(words); i++ {
-					word := []rune(words[i])
-					cipherWord := []rune(cipherTexts[indexSentence])[indexChar : width+1]
-					isInvalid := false
-					for j := 0; j < len(word); j++ {
-						mappedChar, exists := charMap[cipherWord[j]]
-						wordChar := word[j]
-
-						if exists && mappedChar != '_' && mappedChar != wordChar {
-							// if the word has a letter at this position that doesn't match the current guess,
-							// it's an invalid suggestion
-							isInvalid = true
-							break
-						}
-					}
-					if !isInvalid {
-						filteredWords = append(filteredWords, string(word))
-					}
-				}
+				cipherWord := []rune(cipherTexts[indexSentence])[indexChar : indexChar+width+1]
+				filteredWords := filterValidWords(words, cipherWord, charMap)
 				fmt.Print(filteredWords)
 				fmt.Println()
 			} else if userInput == "all-words-at" {
@@ -103,8 +84,10 @@ func startCryptogram(cipherTexts []string) {
 				indexSentenceInput, indexCharInput := tokens[0], tokens[1]
 				indexSentence, _ := strconv.Atoi(indexSentenceInput)
 				indexChar, _ := strconv.Atoi(indexCharInput)
-				for _, pattern := range patternLists[indexSentence][indexChar] {
-					fmt.Println(patternMap[pattern])
+				for width, pattern := range patternLists[indexSentence][indexChar] {
+					words := patternMap[pattern]
+					cipherWord := []rune(cipherTexts[indexSentence])[indexChar : indexChar+width+1]
+					fmt.Println(filterValidWords(words, cipherWord, charMap))
 				}
 			} else if userInput == "indices-for-word" {
 				innerUserInput, _ := waitForInput()
@@ -142,6 +125,25 @@ func parseInput(s string, sep string) []string {
 	return strings.Split(s, sep)
 }
 
-//func filterValidWords() []string {
-//
-//}
+func filterValidWords(words []string, cipherWord []rune, charMap map[rune]rune) []string {
+	filteredWords := make([]string, 0)
+	for i := 0; i < len(words); i++ {
+		word := []rune(words[i])
+		isInvalid := false
+		for j := 0; j < len(word); j++ {
+			mappedChar, exists := charMap[cipherWord[j]]
+			wordChar := word[j]
+
+			if exists && mappedChar != '_' && mappedChar != wordChar {
+				// if the word has a letter at this position that doesn't match the current guess,
+				// it's an invalid suggestion
+				isInvalid = true
+				break
+			}
+		}
+		if !isInvalid {
+			filteredWords = append(filteredWords, string(word))
+		}
+	}
+	return filteredWords
+}
