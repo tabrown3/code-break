@@ -149,30 +149,27 @@ func filterValidWords(clearWords []string, cipherWord []rune, cipherToClearCharM
 		isInvalid := false
 		for j := 0; j < len(clearWord); j++ {
 			cipherChar := cipherWord[j]
-			wordChar := clearWord[j]
+			guessChar := clearWord[j]
 
-			if cipherChar == wordChar {
-				// in a cryptogram, a letter cannot stand for itself (e.g. assign G=G is invalid)
+			if guessChar == cipherChar {
 				isInvalid = true
 				break
 			}
 
-			guessChar, positionHasGuessAssigned := cipherToClearCharMap[cipherWord[j]]
+			previouslyGuessedChar, previouslyGuessedCharExists := cipherToClearCharMap[cipherChar]
+			if previouslyGuessedCharExists {
+				if guessChar == previouslyGuessedChar {
+					continue
+				} else {
+					isInvalid = true
+					break
+				}
+			} else {
+				_, neededCharAlreadyAssigned := clearToCipherCharMap[guessChar]
 
-			if positionHasGuessAssigned && guessChar != wordChar {
-				// if the word has a letter at this position that doesn't match the current guess,
-				// it's an invalid suggestion
-				isInvalid = true
-				break
-			}
-
-			_, neededCharAlreadyAssigned := clearToCipherCharMap[wordChar]
-
-			if !positionHasGuessAssigned && neededCharAlreadyAssigned {
-				// if the word needs a letter at this position that has already been assigned as
-				// a guessed clear text substitution, the suggestion is invalid
-				isInvalid = true
-				break
+				if neededCharAlreadyAssigned {
+					isInvalid = true
+				}
 			}
 		}
 		if !isInvalid {
